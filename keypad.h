@@ -19,6 +19,7 @@ class parallelKeypad
     long getX();               // returns x
     long getY();               // returns y
     int getOp();
+    int gettoken();
 		
 	private:
 		int opCode;

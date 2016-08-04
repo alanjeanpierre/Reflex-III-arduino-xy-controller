@@ -166,4 +166,31 @@ int parallelKeypad::getOp()
   return opCode;
 }
   
+int parallelKeypad::gettoken()
+{
+  int z;
+  char data;
+  do
+  {
+    for (int i = 0; i < 12; i++)
+    {
+      z = i+first;
+      int newdata = digitalRead(z);
+
+      if (newdata == 0)
+      {
+        data = decodeInput(i);
+        while (digitalRead(z) == 0)
+        {
+          delay(1);
+        }
+
+        return data-'0';
+      }
+
+        
+    }
+
+  } while (1);
+}
 

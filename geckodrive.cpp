@@ -61,3 +61,23 @@ long geckoStep::getpos()
   return pos;
 }
 
+void geckoStep::setcell(int location)
+{
+  cell = location;
+}
+
+int geckoStep::getcell()
+{
+  return cell;
+}
+
+void geckoStep::cellpp()
+{
+  cell++;
+}
+
+void geckoStep::cellmm()
+{
+  cell--;
+}
+

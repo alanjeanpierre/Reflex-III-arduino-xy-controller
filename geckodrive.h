@@ -21,12 +21,17 @@ class geckoStep
     void gdir(int);            // change direction
     void sethome();           // sets pos = 0
     long getpos();            // returns pos
+    void setcell(int);
+    int getcell();
+    void cellpp();
+    void cellmm();
 	
   private:
     int disablePin;
     int dirPin;
     int stepPin;
     int dir;
+    int cell;
     long pos;
 
 };

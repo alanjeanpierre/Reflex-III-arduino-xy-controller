@@ -45,13 +45,12 @@ extern LiquidCrystal lcd(24, 26, 28, 30, 32, 34);
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  Serial2.begin(9600,SERIAL_7O1);
+  Serial3.begin(9600,SERIAL_7O1);
   lcd.begin(16, 2);
   m[0].genable(); // turn on x motor
   m[1].genable(); // turn on y motor
 
-  m[0].gdir(1);
-  for (int i = 0; i < 5000; i++)
-  m[0].gstep(500);  
   pinMode(22, INPUT);
 
   
@@ -119,10 +118,6 @@ void loop() {
 
       if (digitalRead(22) == 0)
       {
-        //lcd.clear();
-        //Serial.print("Y\r");
-        
-      
       }
       else
       {
@@ -209,6 +204,50 @@ void loop() {
                 xy(pad.getX(), pad.getY());
                 lcd.noBlink();
                 break;
+          case 33:
+          {
+              int token = 0;
+              int stepCnt = 1;
+              do
+              {
+                lcd.clear();
+                lcd.print("Step++ mode");
+                lcd.setCursor(0,1);
+                lcd.print((char)((m[0].getpos())/900+62));
+                lcd.print(", ");
+                lcd.print((m[0].getpos()-30300)/1800);
+                lcd.print("  ");
+                lcd.print(stepCnt);
+                lcd.blink();
+                token = pad.gettoken();
+                lcd.noBlink();
+                switch(token)
+                {
+                  case 7:
+                    if (stepCnt > 1)
+                      stepCnt--;
+                    break;
+                  case 9:
+                    stepCnt++;
+                    break;
+                  case 8:
+                    xy(m[0].getpos(), m[1].getpos()+stepCnt);
+                    break;
+                  case 2:
+                    xy(m[0].getpos(), m[1].getpos() - stepCnt);
+                    break;
+                  case 4:                  
+                    xy(m[0].getpos()+stepCnt, m[1].getpos());
+                    m[0].cellpp();
+                    break;
+                  case 6:                  
+                    xy(m[0].getpos() - stepCnt, m[1].getpos());
+                    m[0].cellmm();
+                    break;
+                }
+              } while (pad.getY() != 5);
+              break;
+            }
           case 4: //eject
                 lcd.print("Eject Mode");
                 lcd.setCursor(0,1);
@@ -248,6 +287,72 @@ void loop() {
                   delay(DELAY);
                 }
                 break;
+          case 5: // move to cell
+                
+                lcd.print("Move to Cell");
+                lcd.setCursor(0,1);
+                lcd.blink();
+                pad.getInput(1);
+                lcd.noBlink();
+                lcd.home();
+                
+                if (pad.getX() == 999)
+                  break;
+                m[0].setcell(pad.getX());
+                m[1].setcell(pad.getX());
+                lcd.clear();
+                lcd.print("Moving to ");
+                lcd.print((char)(pad.getX()+62));
+                lcd.print(", ");
+                lcd.print(pad.getY());
+                lcd.setCursor(0,1);
+                lcd.blink();
+                
+                xy(750+900*(pad.getX()-1), 30300-1800*(pad.getY()-1));
+                
+                lcd.noBlink();
+                lcd.clear();
+                lcd.home();
+                lcd.print("Done! :)");
+                delay(DELAY);
+                break;
+          case 55:
+          {
+              int token = 0;
+              do
+              {
+                lcd.clear();
+                lcd.print("Cell++ mode");
+                lcd.setCursor(0,1);
+                lcd.print((char)((m[0].getpos()-750)/900+62));
+                lcd.print(", ");
+                lcd.print((m[0].getpos()-30300)/1800);
+                lcd.blink();
+                token = pad.gettoken();
+                lcd.noBlink();
+                switch(token)
+                {
+                  case 8:
+                    xy(m[0].getpos(), m[1].getpos() + 1800);
+                    m[1].cellpp();
+                    break;
+                  case 2:
+                    xy(m[0].getpos(), m[1].getpos() - 1800);
+                    m[1].cellmm();
+                    break;
+                  case 4:                  
+                    xy(m[0].getpos()+900, m[1].getpos());
+                    m[0].cellpp();
+                    break;
+                  case 6:                  
+                    xy(m[0].getpos() - 900, m[1].getpos());
+                    m[0].cellmm();
+                    break;
+                }
+              } while (token != 5);
+              break;
+          }
+            
           case 90: // set direction
                 
                 lcd.print("Manual Direction");
