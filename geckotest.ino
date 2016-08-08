@@ -15,6 +15,12 @@ void calibrate();
 void xy(long, long);
 void eject();
 void eject2();
+void cellpp();
+void cell();
+void disable();
+void changeHz();
+void manualXY();
+void keypadEject();
 
 
 
@@ -45,8 +51,6 @@ extern LiquidCrystal lcd(24, 26, 28, 30, 32, 34);
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  Serial2.begin(9600,SERIAL_7O1);
-  Serial3.begin(9600,SERIAL_7O1);
   lcd.begin(16, 2);
   m[0].genable(); // turn on x motor
   m[1].genable(); // turn on y motor
@@ -103,7 +107,7 @@ void loop() {
               eject();
               break;
             case 'E':
-              eject2();
+              eject2(value);
               break;
             case 'y':
               xy(450+value*900, 30300-value2*1800);
@@ -116,14 +120,7 @@ void loop() {
           
   } // end controls
 
-      if (digitalRead(22) == 0)
-      {
-      }
-      else
-      {
         
-        for (int i = 0; i < 500; i++)
-          Serial.println(ser[i]);
           
         pad.inputOpCode(); 
         
@@ -134,279 +131,28 @@ void loop() {
                 calibrate();
                 break;
           case 1:// disable motors
-                lcd.print("Disable Mode");
-                lcd.setCursor(0,1);
-                lcd.blink();
-                pad.getInput(2);
-                lcd.noBlink();
-      
-                lcd.clear();
-                lcd.home();
-  
-                if (pad.getY() == 999)
-                  break;
-                
-                if (pad.getY() == 0)
-                  {
-                    m[0].gdisable();
-                    m[1].gdisable();
-                    lcd.print("Motors disabled");
-                    delay(DELAY);
-                    
-                  }
-                else
-                {
-                  m[0].genable();
-                  m[1].genable();
-                  
-                  lcd.print("Motors Enabled");
-                  delay(DELAY);
-                }
+                disable();
                 break;
           case 2: // change step hz
-                lcd.print("Change Hz");
-                lcd.setCursor(0,1);
-                lcd.blink();
-                pad.getInput(2);
-                lcd.noBlink();
-                lcd.clear();
-                lcd.home();
-                
-                if (pad.getY() == 999)
-                  break;
-                  
-                hz = pad.getY();
-                lcd.print("Hz changed to ");
-                lcd.setCursor(0,1);
-                lcd.print(hz);
-                delay(DELAY);
+                changeHz;
                 break;
           case 3: // xy
-                lcd.print("Enter XY");
-                lcd.setCursor(0,1);
-                lcd.blink();
-                pad.getInput(1);
-                lcd.noBlink();
-                lcd.clear();
-                lcd.home();
-  
-                
-                if (pad.getX() == 999)
-                  break;
-                  
-                lcd.setCursor(0,1);
-                lcd.print(pad.getX());
-                lcd.print(", ");
-                lcd.print(pad.getY());
-                lcd.setCursor(0,0);
-                lcd.print("Moving to...");
-                lcd.blink();
-                xy(pad.getX(), pad.getY());
-                lcd.noBlink();
+                manualXY();
                 break;
           case 33:
-          {
-              int token = 0;
-              int stepCnt = 1;
-              do
-              {
-                lcd.clear();
-                lcd.print("Step++ mode");
-                lcd.setCursor(0,1);
-                lcd.print((char)((m[0].getpos())/900+62));
-                lcd.print(", ");
-                lcd.print((m[0].getpos()-30300)/1800);
-                lcd.print("  ");
-                lcd.print(stepCnt);
-                lcd.blink();
-                token = pad.gettoken();
-                lcd.noBlink();
-                switch(token)
-                {
-                  case 7:
-                    if (stepCnt > 1)
-                      stepCnt--;
-                    break;
-                  case 9:
-                    stepCnt++;
-                    break;
-                  case 8:
-                    xy(m[0].getpos(), m[1].getpos()+stepCnt);
-                    break;
-                  case 2:
-                    xy(m[0].getpos(), m[1].getpos() - stepCnt);
-                    break;
-                  case 4:                  
-                    xy(m[0].getpos()+stepCnt, m[1].getpos());
-                    m[0].cellpp();
-                    break;
-                  case 6:                  
-                    xy(m[0].getpos() - stepCnt, m[1].getpos());
-                    m[0].cellmm();
-                    break;
-                }
-              } while (pad.getY() != 5);
-              break;
-            }
+            manualStep();
+            break;
           case 4: //eject
-                lcd.print("Eject Mode");
-                lcd.setCursor(0,1);
-                lcd.blink();
-                pad.getInput(2);
-                lcd.noBlink();
-                lcd.home();
-  
-                
-                if (pad.getY() == 999)
-                  break;
-  
-                if (pad.getY() == 1)
-                {
-                  lcd.clear();
-                  lcd.print("Moving to Eject");
-                  lcd.setCursor(0,1);
-                  lcd.print("Position...");
-                  lcd.blink();
-                  eject();
-  
-                  lcd.noBlink();
-                  lcd.clear();
-                  lcd.home();
-                  lcd.print("Ready to Eject");
-                  delay(DELAY);
-                }
-                else if (pad.getY() == 3)
-                {
-                  lcd.print("Ejecting...");
-                  lcd.blink();
-                  eject2();
-                  lcd.noBlink();
-                  lcd.clear();
-                  lcd.home();
-                  lcd.print("Ejected");
-                  delay(DELAY);
-                }
+                keypadEject();
                 break;
           case 5: // move to cell
-                
-                lcd.print("Move to Cell");
-                lcd.setCursor(0,1);
-                lcd.blink();
-                pad.getInput(1);
-                lcd.noBlink();
-                lcd.home();
-                
-                if (pad.getX() == 999)
-                  break;
-                m[0].setcell(pad.getX());
-                m[1].setcell(pad.getX());
-                lcd.clear();
-                lcd.print("Moving to ");
-                lcd.print((char)(pad.getX()+62));
-                lcd.print(", ");
-                lcd.print(pad.getY());
-                lcd.setCursor(0,1);
-                lcd.blink();
-                
-                xy(750+900*(pad.getX()-1), 30300-1800*(pad.getY()-1));
-                
-                lcd.noBlink();
-                lcd.clear();
-                lcd.home();
-                lcd.print("Done! :)");
-                delay(DELAY);
+                cell();
                 break;
           case 55:
-          {
-              int token = 0;
-              do
-              {
-                lcd.clear();
-                lcd.print("Cell++ mode");
-                lcd.setCursor(0,1);
-                lcd.print((char)((m[0].getpos()-750)/900+62));
-                lcd.print(", ");
-                lcd.print((m[0].getpos()-30300)/1800);
-                lcd.blink();
-                token = pad.gettoken();
-                lcd.noBlink();
-                switch(token)
-                {
-                  case 8:
-                    xy(m[0].getpos(), m[1].getpos() + 1800);
-                    m[1].cellpp();
-                    break;
-                  case 2:
-                    xy(m[0].getpos(), m[1].getpos() - 1800);
-                    m[1].cellmm();
-                    break;
-                  case 4:                  
-                    xy(m[0].getpos()+900, m[1].getpos());
-                    m[0].cellpp();
-                    break;
-                  case 6:                  
-                    xy(m[0].getpos() - 900, m[1].getpos());
-                    m[0].cellmm();
-                    break;
-                }
-              } while (token != 5);
-              break;
-          }
-            
-          case 90: // set direction
-                
-                lcd.print("Manual Direction");
-                lcd.setCursor(0,1);
-                lcd.blink();
-                pad.getInput(1);
-                lcd.noBlink();
-                lcd.clear();
-                lcd.home();
-  
-                
-                if (pad.getX() == 999)
-                  break;
-  
-                  
-                switch(pad.getX())
-                {
-                  case 1:
-                    if (pad.getY() == 1)
-                    {
-                      lcd.print("X Motor->Left");
-                      m[0].gdir(0);
-                      delay(DELAY);
-                    }
-                    else if (pad.getY() == 3)
-                    {
-                      lcd.print("X Motor->Right");
-                      m[0].gdir(1);
-                      delay(DELAY);
-                    }
-                    else
-                    ;
-                    break;
-                  case 2:
-                    if (pad.getY() == 1)
-                    {
-                      lcd.print("Y Motor->Down");
-                      m[1].gdir(0);
-                      delay(DELAY);
-                    }
-                    else if (pad.getY() == 3)
-                    {
-                      lcd.print("Y Motor->Up");
-                      m[1].gdir(1);
-                      delay(DELAY);
-                    }
-                    else
-                    ;
-                 
-                }
-            break;
-          case 91: // manual step
-          
-                lcd.print("Manual Stepping");
+                cellpp();
+                break;    
+          case 92:
+                lcd.print("Manual (X,Y)");
                 lcd.setCursor(0,1);
                 lcd.blink();
                 pad.getInput(1);
@@ -416,35 +162,12 @@ void loop() {
                 
                 if (pad.getY() == 999)
                   break;
-  
-                  
-                  lcd.print(pad.getY());
-                  lcd.print(" steps...");
-                  lcd.blink();
-                if (pad.getX() == 1)
-                {
-                  for (int i = 0; i < pad.getY(); i++)
-                  {
-                    m[0].gstep(hz);
-                  }
-                }
-                else if (pad.getX() == 2)
-                  for (int i = 0; i < pad.getY(); i++)
-                  {
-                    m[1].gstep(hz);
-                  }
-                else
-                  ;
-  
-                  
-                  lcd.noBlink();
-                  lcd.setCursor(0,1);
-                  lcd.print("Done");
-                  delay(DELAY);
-                break;
-          
+            
+                m[0].setpos(pad.getX());
+                m[1].setpos(pad.getY());
+                lcd.noBlink();
         }
-      }
+      
   
 
 }
@@ -551,10 +274,301 @@ void eject() // sets plate over hooking mechanism and partially ejects
   
 }
 
-void eject2() // fully ejects plate
+void eject2(int value) // fully ejects plate
 {
-  xy(29000, 36000);
+  switch (value)
+  {
+    case 1: // eject
+      xy(29000, 36000);
+      break;
+    case 2: // accept
+      xy(23000, 36000);
+      break;
+    case 3: // return
+      xy(16000, 36000);
+      hz = 2000;
+      xy(16000, 30000);
+      break;
+  }
 }
+
+
+
+void disable()
+{
+
+  lcd.print("Disable Mode");
+  lcd.setCursor(0,1);
+  lcd.blink();
+  pad.getInput(2);
+  lcd.noBlink();
+
+  lcd.clear();
+  lcd.home();
+
+  if (pad.getY() == 999)
+    return;
+  
+  if (pad.getY() == 0)
+    {
+    m[0].gdisable();
+    m[1].gdisable();
+    lcd.print("Motors disabled");
+    delay(DELAY);
+    
+    }
+  else
+  {
+    m[0].genable();
+    m[1].genable();
+    
+    lcd.print("Motors Enabled");
+    delay(DELAY);
+  }
+}
+
+void changeHz()
+{
+
+  lcd.print("Change Hz");
+  lcd.setCursor(0,1);
+  lcd.blink();
+  pad.getInput(2);
+  lcd.noBlink();
+  lcd.clear();
+  lcd.home();
+  
+  if (pad.getY() == 999)
+    return;
+    
+  hz = pad.getY();
+  lcd.print("Hz changed to ");
+  lcd.setCursor(0,1);
+  lcd.print(hz);
+  delay(DELAY);
+}
+
+void manualXY()
+{
+  lcd.print("Enter XY");
+  lcd.setCursor(0,1);
+  lcd.blink();
+  pad.getInput(1);
+  lcd.noBlink();
+  lcd.clear();
+  lcd.home();
+
+  
+  if (pad.getX() == 999 || pad.getY())
+    return;
+    
+  lcd.setCursor(0,1);
+  lcd.print(pad.getX());
+  lcd.print(", ");
+  lcd.print(pad.getY());
+  lcd.setCursor(0,0);
+  lcd.print("Moving to...");
+  lcd.blink();
+  xy(pad.getX(), pad.getY());
+  lcd.noBlink();
+}
+
+void manualStep()
+{
+  int token = 0;
+  int stepCnt = 1;
+  do
+  {
+    lcd.clear();
+    lcd.print("Step++ mode");
+    lcd.setCursor(0,1);
+    lcd.print(m[0].getpos());
+    lcd.print(", ");
+    lcd.print(m[1].getpos());
+    lcd.print("  ");
+    lcd.print((int)(log(stepCnt)/log(2)));
+    lcd.blink();
+    token = pad.gettoken();
+    lcd.noBlink();
+    switch(token)
+    {
+      case 1:
+      if (stepCnt > 1)
+        stepCnt/=2;
+        break;
+      case 3:
+      if (stepCnt < 4000)
+         stepCnt*=2;
+      break;
+      case 8:
+        xy(m[0].getpos(), m[1].getpos()+stepCnt);
+        break;
+      case 2:
+        if (m[1].getpos() - stepCnt > 0)
+          xy(m[0].getpos(), m[1].getpos() - stepCnt);
+        break;
+      case 6:                  
+        xy(m[0].getpos()+stepCnt, m[1].getpos());
+        
+        break;
+      case 4:         
+        if (m[0].getpos() - stepCnt > 0)       
+          xy(m[0].getpos() - stepCnt, m[1].getpos());
+      
+        break;
+    }
+  } while (token != 5);
+}
+
+void keypadEject()
+{
+  lcd.print("Eject Mode");
+  lcd.setCursor(0,1);
+  lcd.blink();
+  pad.getInput(2);
+  lcd.noBlink();
+  lcd.home();
+
+  
+  if (pad.getY() == 999)
+    return;;
+
+  if (pad.getY() == 1)
+  {
+    lcd.clear();
+    lcd.print("Moving to Eject");
+    lcd.setCursor(0,1);
+    lcd.print("Position...");
+    lcd.blink();
+    eject();
+
+    lcd.noBlink();
+    lcd.clear();
+    lcd.home();
+    lcd.print("Ready to Eject");
+    delay(DELAY);
+  }
+  else if (pad.getY() == 2)
+  {
+    lcd.print("Ejecting...");
+    lcd.blink();
+    eject2(1);
+    lcd.noBlink();
+    lcd.clear();
+    lcd.home();
+    lcd.print("Ejected");
+    delay(DELAY);
+  }
+  else if (pad.getY() == 3)
+  {
+    lcd.print("Accepting...");
+    lcd.blink();
+    eject2(2);
+    lcd.noBlink();
+    lcd.clear();
+    lcd.home();
+    lcd.print("Accepted");
+    delay(DELAY);
+    
+  }
+  else if (pad.getY() == 4)
+  {
+    
+    lcd.print("Returning...");
+    lcd.blink();
+    eject2(3);
+    lcd.noBlink();
+    lcd.clear();
+    lcd.home();
+    lcd.print("Returned");
+    delay(DELAY);
+  }
+  else
+  {
+    
+  }
+    
+}
+
+void cell()
+{
+  lcd.print("Move to Cell");
+  lcd.setCursor(0,1);
+  lcd.blink();
+  pad.getInput(1);
+  lcd.noBlink();
+  lcd.home();
+  
+  if (pad.getX() == 999||pad.getY() == 999)
+    return;
+  m[1].setcell(pad.getX());
+  m[0].setcell(pad.getY());
+  lcd.clear();
+  lcd.print("Moving to ");
+  lcd.print((char)(pad.getY()+64));
+  lcd.print(", ");
+  lcd.print(pad.getX());
+  lcd.setCursor(0,1);
+  lcd.blink();
+  
+  xy(750+900*(pad.getY()-1), 30300-1800*(pad.getX()-1));
+  
+  lcd.noBlink();
+  lcd.clear();
+  lcd.home();
+  lcd.print("Done! :)");
+  delay(DELAY);
+}
+
+void cellpp()
+{
+  int token = 0;
+  do
+  {
+    lcd.clear();
+    lcd.print("Cell++ mode");
+    lcd.setCursor(0,1);
+    lcd.print((char)(m[1].getcell()+64));
+    lcd.print(", ");
+    lcd.print(m[0].getcell());
+    lcd.blink();
+    token = pad.gettoken();
+    lcd.noBlink();
+    switch(token)
+    {
+      case 8:
+        if (m[1].getcell() + 1 < 17)
+        {
+          xy(m[0].getpos(), m[1].getpos() - 1800);
+          m[1].cellpp();
+        }
+        break;
+      case 2:
+        if (m[1].getcell() - 1 > 0)
+        {
+          xy(m[0].getpos(), m[1].getpos() + 1800);
+          m[1].cellmm();
+        }
+        break;
+      case 4:     
+        if (m[0].getcell() + 1 < 25)
+        {             
+          xy(m[0].getpos()-900, m[1].getpos());
+          m[0].cellpp();
+        }
+        break;
+      case 6:     
+        if (m[0].getcell() - 1 > 0)
+        {             
+          xy(m[0].getpos() + 900, m[1].getpos());
+          m[0].cellmm();
+        }
+        break;
+    }
+    
+  } while (token != 5);
+}
+
 
 
 

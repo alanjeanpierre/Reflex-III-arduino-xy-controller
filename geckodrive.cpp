@@ -23,7 +23,7 @@ void geckoStep::gstep(long hz)
       digitalWrite(stepPin, HIGH);
       digitalWrite(stepPin, LOW);
       delayMicroseconds(1000000/hz);
-      pos += pow(-1, (2-dir));
+      pos += (dir > 0) ? -1 : 1;
 }
 
 void geckoStep::genable()
@@ -80,4 +80,10 @@ void geckoStep::cellmm()
 {
   cell--;
 }
+
+void geckoStep::setpos(long currentpos)
+{
+  pos = currentpos;
+}
+
 
