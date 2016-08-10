@@ -4,7 +4,6 @@
 
 extern LiquidCrystal lcd;
 
-int intpow(int, int);
 
 parallelKeypad::parallelKeypad(int start)
 {
@@ -28,7 +27,7 @@ void parallelKeypad::inputOpCode()
   lcd.print("Input Op Code");
   lcd.setCursor(0,1);
   lcd.blink();
-  readInput(0);
+  getInput(0);
 
   
   lcd.noBlink();
@@ -51,15 +50,20 @@ void parallelKeypad::getInput(int i)
     while (j < 6)
     {
        input = gettoken();
-       lcd.print(input);
+       lcd.print((char)(input+'0'));
        
 
        if (input == -13) // '#' (35) - '0' (48)
         break;
        else
-        total +=input*intpow(10, j);
+       {
+        if (j)
+         total *=10;
+         
+        total +=input;
 
         j++;
+       }
     }
 
     if (i == 0)
@@ -231,19 +235,5 @@ int parallelKeypad::gettoken()
     }
 
   } while (1);
-}
-
-int intpow(int base, int exponent)
-{
-  int result = 1;
-  while (exponent)
-  {
-    if (exponent & 1)
-      result *= base;
-    exponent >>= 1;
-    base *= base;
-  }
-
-  return result;
 }
 

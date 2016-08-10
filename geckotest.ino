@@ -34,14 +34,13 @@ parallelKeypad pad(2); // object to read keypad data
 
 
 
-int hz = 2000;       // steps per second
+int hz = 1000;       // steps per second
 char control; // for serial control
 long value; // serial control
 long value2; // serial control
 
 int i = 0;
 
-char ser[500];
 
 extern LiquidCrystal lcd(24, 26, 28, 30, 32, 34);
 
@@ -57,8 +56,6 @@ void setup() {
 
   pinMode(22, INPUT);
 
-  
-  //calibrate();
 }
 
 void loop() {
@@ -121,7 +118,6 @@ void loop() {
   } // end controls
 
         
-          
         pad.inputOpCode(); 
         
         lcd.setCursor(0,0);
@@ -134,7 +130,7 @@ void loop() {
                 disable();
                 break;
           case 2: // change step hz
-                changeHz;
+                changeHz();
                 break;
           case 3: // xy
                 manualXY();
@@ -194,7 +190,7 @@ void calibrate() // resets plate to 0, upper right. Changes Y first
       k++;
     }
     
-    m[1].gstep(hz);
+    m[1].gstep(hz*2);
   }
   m[1].sethome();
   
@@ -256,7 +252,7 @@ void xy(long x, long y) // moves plate to given XY position. x y = steps from 0
   for (long i = 0; i < toX; i++)
     m[0].gstep(hz);
   for (long i = 0; i < toY; i++)
-    m[1].gstep(hz);
+    m[1].gstep(hz*2);
   
   
 }
@@ -268,9 +264,9 @@ void eject() // sets plate over hooking mechanism and partially ejects
     xy(m[0].getpos(), 25000);
   }
 
-  xy(16000, 36000);
+  xy(16000, 35000);
   hz = 500;
-  xy(23000, 36000);
+  xy(23000, 35000);
   
 }
 
@@ -279,13 +275,13 @@ void eject2(int value) // fully ejects plate
   switch (value)
   {
     case 1: // eject
-      xy(29000, 36000);
+      xy(29000, 35000);
       break;
     case 2: // accept
-      xy(23000, 36000);
+      xy(23000, 35000);
       break;
     case 3: // return
-      xy(16000, 36000);
+      xy(16000, 35000);
       hz = 2000;
       xy(16000, 30000);
       break;
@@ -377,6 +373,7 @@ void manualStep()
 {
   int token = 0;
   int stepCnt = 1;
+  bool admin = 0;
   do
   {
     lcd.clear();
@@ -400,11 +397,11 @@ void manualStep()
       if (stepCnt < 4000)
          stepCnt*=2;
       break;
-      case 8:
+      case 2:
         xy(m[0].getpos(), m[1].getpos()+stepCnt);
         break;
-      case 2:
-        if (m[1].getpos() - stepCnt > 0)
+      case 8:
+        if (m[1].getpos() - stepCnt > 0 || admin)
           xy(m[0].getpos(), m[1].getpos() - stepCnt);
         break;
       case 6:                  
@@ -412,10 +409,12 @@ void manualStep()
         
         break;
       case 4:         
-        if (m[0].getpos() - stepCnt > 0)       
+        if (m[0].getpos() - stepCnt > 0 || admin)       
           xy(m[0].getpos() - stepCnt, m[1].getpos());
       
         break;
+      case 0:
+        admin = true;
     }
   } while (token != 5);
 }
@@ -501,6 +500,11 @@ void cell()
   
   if (pad.getX() == 999||pad.getY() == 999)
     return;
+  if (pad.getX() > 17 || pad.getY() > 25)
+  {
+    cell();
+    return;
+  }
   m[1].setcell(pad.getX());
   m[0].setcell(pad.getY());
   lcd.clear();
@@ -550,17 +554,17 @@ void cellpp()
           m[1].cellmm();
         }
         break;
-      case 4:     
+      case 6:     
         if (m[0].getcell() + 1 < 25)
         {             
-          xy(m[0].getpos()-900, m[1].getpos());
+          xy(m[0].getpos()+900, m[1].getpos());
           m[0].cellpp();
         }
         break;
-      case 6:     
+      case 4:     
         if (m[0].getcell() - 1 > 0)
         {             
-          xy(m[0].getpos() + 900, m[1].getpos());
+          xy(m[0].getpos() - 900, m[1].getpos());
           m[0].cellmm();
         }
         break;
